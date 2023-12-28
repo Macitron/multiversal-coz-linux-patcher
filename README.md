@@ -1,5 +1,7 @@
 # The Polyversal Linux Steam Patcher for the Committee of Zero's Science Adventure Steam Patches on Linux
 
+![gif test](/assets/unzip-poly.gif)
+
 These instructions and the included Bash script are intended to streamline installation of CoZ patches for Steam Play, including on Steam Deck.
 
 This script is possible in no small part due to the work of [/u/PartTimeBento](https://www.reddit.com/u/PartTimeBento), who [provided many of the necessary instructions to automate this in a post on Reddit](https://www.reddit.com/r/SteamDeck/comments/uitpca/patching_steinsgate_and_steinsgate0_on_the).
