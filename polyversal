@@ -8,9 +8,14 @@ readonly VERSION=2.1.1
 
 progname="$(basename "$0")"
 readonly progname
+readonly pkgname='polyversal-patcher'
 
-DATADIR=$(dirname "$0")
-readonly DATADIR
+# State dir: logs, patch folders maybe if we ever do that
+# Cache dir: A;C proton tarball, fifo pipes, etc. I'd rather use XDG_RUNTIME_DIR, but the spec is super flimsy with it
+readonly XDG_DATA_HOME=${XDG_DATA_HOME:-$HOME/.local/share}
+readonly XDG_CACHE_HOME=${XDG_CACHE_HOME:-$HOME/.cache}
+readonly PVS_DATA_DIR=$XDG_DATA_HOME/$pkgname
+readonly PVS_CACHE_DIR=$XDG_CACHE_HOME/$pkgname
 
 # Protontricks versions earlier than this minversion will cause issues that are hard to make sense of.
 readonly ptx_flatpak='com.github.Matoking.protontricks'
@@ -252,9 +257,12 @@ if ! $allow_root && [[ $EUID == 0 ]]; then
   exit 1
 fi
 
-# Logging is output to a new .log file within 'logs/' under the same directory
-# as this script.
-logdir=${DATADIR}/logs
+# Create XDG directories if they don't already exist
+mkdir -p "$PVS_DATA_DIR"
+mkdir -p "$PVS_CACHE_DIR"
+
+# Logging is written to the script's XDG data home
+logdir=$PVS_DATA_DIR/logs
 logname="${logdir}/polyversal-${exectime}"  # minus the .log so we can add -wine
 if $mode_filelog; then
   # https://stackoverflow.com/questions/3173131/redirect-copy-of-stdout-to-log-file-from-within-bash-script-itself
@@ -851,7 +859,7 @@ function download_ac_proton() {
 
   # usage: download_ac_proton
 
-  proton_tar_name="$DATADIR/acge-dl-TEMP-$(iso_date).tar.gz"
+  proton_tar_name="$PVS_CACHE_DIR/acge-dl-TEMP-$(iso_date).tar.gz"
   trap 'cleanup_proton_install' EXIT SIGHUP SIGINT SIGQUIT SIGTERM  # note: I don't know what I'm doing. these just seem like the right signals to trap
 
   # CLI is so much easier jfc
@@ -864,7 +872,7 @@ function download_ac_proton() {
     return 0
   fi
 
-  curl_fifo="$DATADIR/curl-fifo-$(iso_date)"
+  curl_fifo="$PVS_CACHE_DIR/curl-fifo-$(iso_date)"
   if ! mkfifo "$curl_fifo"; then
     log_fatal "error occurred creating named pipe for cURL call"
     zenity_error "An unexpected error occurred creating a named pipe while downloading the custom Proton build. Check the logs for details."
@@ -969,7 +977,7 @@ Download and install it anyway? (y/n): " answer
     tar_tail='> "${logname}-untar.log" 2>&1'
   fi
 
-  local tar_cmd="tar $tar_opts \"$proton_tar_name\" -C \"$DATADIR\" $tar_tail"
+  local tar_cmd="tar $tar_opts \"$proton_tar_name\" -C \"$PVS_CACHE_DIR\" $tar_tail"
   log_debug "running untar command: \`$tar_cmd\`"
 
   eval "$tar_cmd" &
@@ -988,7 +996,7 @@ Download and install it anyway? (y/n): " answer
   if [[ $tar_ret == 0 ]]; then
     log_info "extraction successful. moving to $protondir"
     $prev_installed && rm -rf "$protondir"
-    ! mv "$DATADIR/$AC_PROTON_DIRNAME" "$compatdir" && has_gone_wrong=true
+    ! mv "$PVS_CACHE_DIR/$AC_PROTON_DIRNAME" "$compatdir" && has_gone_wrong=true
   else
     log_error "an error occurred while extracting the tarball"
     has_gone_wrong=true
@@ -1013,7 +1021,7 @@ function cleanup_proton_install() {
   [[ -n $dl_proc ]] && kill "$dl_proc"
 
   # tar extraction cleanup
-  [[ -d $DATADIR/$AC_PROTON_DIRNAME ]] && rm -rf "${DATADIR:?}/$AC_PROTON_DIRNAME"
+  [[ -d $PVS_CACHE_DIR/$AC_PROTON_DIRNAME ]] && rm -rf "${PVS_CACHE_DIR:?}/$AC_PROTON_DIRNAME"
 
   exit $ret
 }
