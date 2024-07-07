@@ -262,11 +262,11 @@ mkdir -p "$PVS_DATA_DIR"
 mkdir -p "$PVS_CACHE_DIR"
 
 # Logging is written to the script's XDG data home
-logdir=$PVS_DATA_DIR/logs
-logname="${logdir}/polyversal-${exectime}"  # minus the .log so we can add -wine
+pvs_logdir=$PVS_DATA_DIR/logs
+logname="${pvs_logdir}/polyversal-${exectime}"  # minus the .log so we can add -wine
 if $mode_filelog; then
   # https://stackoverflow.com/questions/3173131/redirect-copy-of-stdout-to-log-file-from-within-bash-script-itself
-  mkdir -p "$logdir"
+  mkdir -p "$pvs_logdir"
   exec >  >(tee -ia "${logname}.log")
   exec 2> >(tee -ia "${logname}.log" >&2)
 fi
@@ -1026,6 +1026,17 @@ function cleanup_proton_install() {
   exit $ret
 }
 
+function open_logdir() {
+
+  # usage: open_logdir
+
+  if ! xdg-open "$pvs_logdir"; then
+    # I'm not solving the chicken-egg problem, good luck
+    log_error "error opening log directory"
+    zenity_error "An error occurred while opening the Polyversal logs directory. See the logs for details.\n(er... at '$pvs_logdir', since this didn't work :^) )"
+  fi
+}
+
 function start_screen() {
 
   # usage: start_screen $@
@@ -1039,7 +1050,8 @@ function start_screen() {
         TRUE  'Install a patch'             \
         FALSE 'Uninstall a patch'           \
         FALSE 'Nuke a Proton prefix'        \
-        FALSE 'Install custom A;C Proton'   )
+        FALSE 'Install custom A;C Proton'   \
+        FALSE 'Open the logs directory'     )
     local zen_ret=$?
     log_debug "zen_ret for start_screen = $zen_ret"
     case $zen_ret in
@@ -1105,6 +1117,14 @@ function start_screen() {
 
       log_info "downloading and installing custom A;C proton ..."
       install_ac_proton
+      ;;
+
+    logs | log | logdir | 'open the logs directory')
+
+      # polyversal logs
+
+      log_info "opening log directory at '$pvs_logdir' ..."
+      open_logdir
       ;;
 
     *)
