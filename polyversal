@@ -98,7 +98,11 @@ txt_red=''
 txt_purple=''
 txt_blue=''
 function set_logcolors() {
-  if ! test -t 2 || [[ ! $(tput colors) -ge 8 ]]; then return 0; fi
+  if ! $opt_force_color; then
+    if ! test -t 2 || [[ ! $(tput colors) -ge 8 ]]; then
+      return 0
+    fi
+  fi
 
   txt_normal="$(tput sgr0)"
 
@@ -214,8 +218,8 @@ function check_ptx() {
 
 ### Option Parsing ###
 
-longopts='help,verbose,steamroot:,force-flatpak,i-really-want-to-run-this-as-root-dont-question-me-boy'
-if ! parsed_args=$(getopt -n "$progname" -o 'hvr:F' --long "$longopts" -- "$@"); then
+longopts='help,verbose,steamroot:,force-flatpak,color,i-really-want-to-run-this-as-root-dont-question-me-boy'
+if ! parsed_args=$(getopt -n "$progname" -o 'hvr:FC' --long "$longopts" -- "$@"); then
   log_fatal "error parsing command line arguments"
   print_usage >&2
   exit 1
@@ -225,6 +229,7 @@ eval set -- "$parsed_args"
 mode_debug=false
 STEAMROOT=$HOME/.steam/root
 FORCE_FLATPAK=false
+opt_force_color=false
 allow_root=false
 while true; do
   case "$1" in
@@ -239,6 +244,9 @@ while true; do
       shift 2 ;;
     -F | --force-flatpak)
       FORCE_FLATPAK=true
+      shift ;;
+    -C | --color)
+      opt_force_color=true
       shift ;;
     --i-really-want-to-run-this-as-root-dont-question-me-boy)
       allow_root=true
