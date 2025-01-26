@@ -143,7 +143,7 @@ function _log_msg() {
 
   local header
   header=$progname
-  $mode_debug && header+=:${BASH_LINENO[1]}   # line number where log fn was called
+  $opt_debug && header+=:${BASH_LINENO[1]}   # line number where log fn was called
 
   local body=${*:2}
 
@@ -154,7 +154,7 @@ function log_warn() { _log_msg warn "$*"; }
 function log_error() { _log_msg err "$*"; }
 function log_fatal() { _log_msg fatal "$*"; }
 function log_debug() {
-  ! $mode_debug && return 0
+  ! $opt_debug && return 0
   _log_msg debug "$*"
 }
 
@@ -226,15 +226,15 @@ if ! parsed_args=$(getopt -n "$progname" -o 'hvr:FC' --long "$longopts" -- "$@")
 fi
 eval set -- "$parsed_args"
 
-mode_debug=false
-STEAMROOT=$HOME/.steam/root
-FORCE_FLATPAK=false
+opt_debug=false
+opt_force_flatpak=false
 opt_force_color=false
-allow_root=false
+opt_allow_root=false
+STEAMROOT=$HOME/.steam/root
 while true; do
   case "$1" in
     -v | --verbose)
-      mode_debug=true
+      opt_debug=true
       shift ;;
     -h | --help)
       long_usage
@@ -243,13 +243,13 @@ while true; do
       STEAMROOT=$2
       shift 2 ;;
     -F | --force-flatpak)
-      FORCE_FLATPAK=true
+      opt_force_flatpak=true
       shift ;;
     -C | --color)
       opt_force_color=true
       shift ;;
     --i-really-want-to-run-this-as-root-dont-question-me-boy)
-      allow_root=true
+      opt_allow_root=true
       shift ;;
     --)
       shift
@@ -261,7 +261,7 @@ while true; do
   esac
 done
 
-if ! $allow_root && [[ $EUID == 0 ]]; then
+if ! $opt_allow_root && [[ $EUID == 0 ]]; then
   printf '%s\n' "YOU ARE RUNNING THIS SCRIPT AS ROOT! This is VERY PROBABLY NOT what you want to do. Please run it without \`sudo'."
   exit 1
 fi
@@ -333,7 +333,7 @@ function setup_protontricks() {
   local ret_code=0
 
   # check for valid system install
-  if ! $FORCE_FLATPAK; then
+  if ! $opt_force_flatpak; then
     if is_cmd protontricks; then
       if check_ptx sys; then
         log_info "detected valid system install of protontricks"
@@ -893,7 +893,7 @@ function download_ac_proton() {
     exit 1
   fi
 
-  if $mode_debug; then
+  if $opt_debug; then
     # show cURL output for debugging
     curl -Lo "$proton_tar_name" "$AC_PROTON_URL" 2>&1 | tee "$curl_fifo" 1>&2 &
   else
