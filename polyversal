@@ -35,9 +35,15 @@ readonly AC_PROTON_DIRNAME='protonge-anonymouscode'
 ### Functions ###
 
 function print_usage() {
-  cat << EOF >&2
+  cat << EOF
 usage: polyversal [ -v | --verbose ] [ -h | --help ] [ -r | --steamroot ]
                   [ -F | --force-flatpak ] ...
+EOF
+}
+
+function long_usage() {
+  print_usage
+  cat << EOF
 
 Use a GUI for selecting everything graphically.
 $ $progname
@@ -211,7 +217,7 @@ function check_ptx() {
 longopts='help,verbose,steamroot:,force-flatpak,i-really-want-to-run-this-as-root-dont-question-me-boy'
 if ! parsed_args=$(getopt -n "$progname" -o 'hvr:F' --long "$longopts" -- "$@"); then
   log_fatal "error parsing command line arguments"
-  print_usage
+  print_usage >&2
   exit 1
 fi
 eval set -- "$parsed_args"
@@ -226,7 +232,7 @@ while true; do
       mode_debug=true
       shift ;;
     -h | --help)
-      print_usage
+      long_usage
       exit 0  ;;
     -r | --steamroot)
       STEAMROOT=$2
@@ -241,8 +247,8 @@ while true; do
       shift
       break ;;
     *)
-      log_fatal "Unexpected option '$1', this should never happen"
-      print_usage
+      log_fatal "Unexpected option '$1'"
+      print_usage >&2
       exit 1  ;;
   esac
 done
