@@ -46,7 +46,7 @@ See [TROUBLESHOOTING.md](/docs/TROUBLESHOOTING.md) if anything goes wrong during
 
 1. **For Robotics;Notes Elite and DaSH,** you'll probably want to install a Community Layout for the controls as the official one is borderline non-functional.
 
-And that's it! Do be sure to [verify that the patch is actually active upon booting the game](/docs/VERIFY.md). The script might have failed even if you reached the success screen, since WINE makes it difficult to know for sure whether something went wrong.
+And that's it! You can close the terminal window that was opened once you're done. Do be sure to [verify that the patch is actually active upon booting the game](/docs/VERIFY.md) - the script might have failed even if you reached the success screen, since Wine makes it difficult to know for sure whether something went wrong.
 
 ## Something Went Wrong
 
